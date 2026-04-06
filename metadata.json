@@ -1,5 +1,5 @@
 {
-  "name": "Blindfold Chess Trainer",
-  "description": "A modern web app to improve blindfold chess visualization skills through interactive training modes.",
+  "name": "AI Chess Analyzer",
+  "description": "A powerful chess analysis platform to import games from Chess.com and review them interactively using a built-in Stockfish engine.",
   "requestFramePermissions": []
 }
