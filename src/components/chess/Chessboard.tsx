@@ -16,6 +16,21 @@ interface ChessboardProps {
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
 
+const PIECE_URLS: Record<string, string> = {
+  wp: "https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg",
+  wr: "https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg",
+  wn: "https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg",
+  wb: "https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg",
+  wq: "https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg",
+  wk: "https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg",
+  bp: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg",
+  br: "https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg",
+  bn: "https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg",
+  bb: "https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg",
+  bq: "https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg",
+  bk: "https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg",
+};
+
 export function Chessboard({
   onSquareClick,
   highlightedSquares = {},
@@ -68,7 +83,7 @@ export function Chessboard({
                   <motion.img
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    src={`https://www.chess.com/chesspieces/neo/150/${piece.color}${piece.type}.png`}
+                    src={PIECE_URLS[`${piece.color}${piece.type}`]}
                     alt={`${piece.color}${piece.type}`}
                     className="w-[80%] h-[80%] drop-shadow-md pointer-events-none"
                     draggable={false}

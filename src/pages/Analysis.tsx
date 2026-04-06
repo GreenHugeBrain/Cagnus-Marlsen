@@ -21,6 +21,7 @@ type MoveClass = 'best' | 'excellent' | 'good' | 'inaccuracy' | 'mistake' | 'blu
 export function Analysis({ game, username, onBack }: AnalysisProps) {
   const [chess] = useState(new Chess());
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
+  const [startingFen, setStartingFen] = useState<string>('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [pieces, setPieces] = useState<Record<Square, { type: string; color: 'w' | 'b' }>>({});
   const [openingName, setOpeningName] = useState<string | null>(null);
@@ -61,6 +62,12 @@ export function Analysis({ game, username, onBack }: AnalysisProps) {
     
     // Extract opening from headers
     const headers = chess.header();
+    if (headers.FEN) {
+      setStartingFen(headers.FEN);
+    } else {
+      setStartingFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    }
+    
     if (headers.ECOUrl) {
       // Chess.com often puts the opening in the ECOUrl
       const parts = headers.ECOUrl.split('/');
@@ -88,7 +95,7 @@ export function Analysis({ game, username, onBack }: AnalysisProps) {
     
     // Start background analysis
     let bgIndex = 0;
-    const tempChess = new Chess();
+    const tempChess = new Chess(headers.FEN || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     
     const analyzeNext = () => {
       if (bgIndex >= history.length || !bgEngineRef.current) return;
@@ -131,7 +138,7 @@ export function Analysis({ game, username, onBack }: AnalysisProps) {
       engineRef.current.setMultiPv(engineLines);
       // Re-trigger analysis with new depth
       if (currentMoveIndex >= 0) {
-        const tempChess = new Chess();
+        const tempChess = new Chess(startingFen);
         for (let i = 0; i <= currentMoveIndex; i++) {
           tempChess.move(moveHistory[i]);
         }
@@ -152,12 +159,16 @@ export function Analysis({ game, username, onBack }: AnalysisProps) {
       setExplanation(null);
     }
 
-    const tempChess = playChess || new Chess();
+    const tempChess = playChess || new Chess(startingFen);
     
     if (!playChess) {
       // Reset and replay up to current index
       for (let i = 0; i <= currentMoveIndex; i++) {
-        tempChess.move(moveHistory[i]);
+        try {
+          tempChess.move(moveHistory[i]);
+        } catch (e) {
+          console.error("Failed to replay move:", moveHistory[i], e);
+        }
       }
     }
 
@@ -315,9 +326,13 @@ export function Analysis({ game, username, onBack }: AnalysisProps) {
     setIsExplaining(true);
     
     // Reconstruct FEN for current position
-    const tempChess = new Chess();
+    const tempChess = new Chess(startingFen);
     for (let i = 0; i <= currentMoveIndex; i++) {
-      tempChess.move(moveHistory[i]);
+      try {
+        tempChess.move(moveHistory[i]);
+      } catch (e) {
+        console.error("Failed to replay move for explanation:", moveHistory[i], e);
+      }
     }
     
     const fen = tempChess.fen();
@@ -332,9 +347,13 @@ export function Analysis({ game, username, onBack }: AnalysisProps) {
   };
 
   const startPlayMode = () => {
-    const tempChess = new Chess();
+    const tempChess = new Chess(startingFen);
     for (let i = 0; i <= currentMoveIndex; i++) {
-      tempChess.move(moveHistory[i]);
+      try {
+        tempChess.move(moveHistory[i]);
+      } catch (e) {
+        console.error("Failed to replay move for play mode:", moveHistory[i], e);
+      }
     }
     setPlayChess(tempChess);
     setIsPlaying(true);
@@ -375,23 +394,19 @@ export function Analysis({ game, username, onBack }: AnalysisProps) {
                 const to = bestMove.substring(2, 4);
                 const promotion = bestMove.length > 4 ? bestMove[4] : undefined;
                 
-                playChess.move({ from, to, promotion });
-                setPlayChess(new Chess(playChess.fen()));
+                try {
+                  playChess.move({ from, to, promotion });
+                  setPlayChess(new Chess(playChess.fen()));
+                } catch (e) {
+                  console.error("Engine provided invalid move:", bestMove, e);
+                }
               }
               setIsEngineThinking(false);
             }, 10); // Fast response for playing
           }
-        } else {
-          // Invalid move, maybe selecting a different piece
-          const piece = playChess.get(square);
-          if (piece && piece.color === playChess.turn()) {
-            setSelectedSquare(square);
-          } else {
-            setSelectedSquare(null);
-          }
         }
       } catch (e) {
-        // Invalid move
+        // Invalid move, maybe selecting a different piece
         const piece = playChess.get(square);
         if (piece && piece.color === playChess.turn()) {
           setSelectedSquare(square);

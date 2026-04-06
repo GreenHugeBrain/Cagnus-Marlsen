@@ -27,11 +27,7 @@ export class StockfishEngine {
     try {
       // Using a reliable CDN for stockfish.js
       const workerBlob = new Blob([
-        `importScripts("https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js");
-         Stockfish().then((sf) => {
-           sf.addMessageListener((msg) => postMessage(msg));
-           onmessage = (e) => sf.postMessage(e.data);
-         });`
+        `importScripts("https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js");`
       ], { type: 'application/javascript' });
       
       this.worker = new Worker(URL.createObjectURL(workerBlob));
